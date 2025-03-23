@@ -1,30 +1,35 @@
-// Файл функций Convex для сохранения сообщений пользователей
-import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { mutation } from "./_generated/server";
 
-// Функция сохранения сообщения в базу данных
-export const save = mutation({
-  args: {
-    text: v.optional(v.string(), ""),
-    timestamp: v.optional(v.number(), 0),
-    userId: v.optional(v.string(), ""),
-    username: v.optional(v.string(), ""),
-    phone_number: v.optional(v.string(), ""),
-    intent: v.optional(v.string(), ""),
-    full_name: v.optional(v.string(), ""),
-    fullname: v.optional(v.string(), ""),
-  },
-  handler: async (ctx, args) => {
-    const messageId = await ctx.db.insert("messages", args);
-    return messageId;
-  },
-});
+// Функция сохранения сообщения
+export const save = mutation(async ({ db }, args) => {
+  const {
+    userId,
+    recipientId,
+    content,
+    source,
+    status,
+    createdAt,
+    errorMessage,
+    username,
+    phone_number,
+    intent,
+    full_name
+  } = args;
 
-// Функция для получения списка всех сообщений
-export const list = query({
-  args: {},
-  handler: async (ctx) => {
-    const messages = await ctx.db.query("messages").collect();
-    return messages;
-  },
+  // Сохраняем сообщение в базу данных
+  const message = await db.insert("messages", {
+    userId,
+    recipientId,
+    content,
+    source,
+    status,
+    createdAt,
+    ...(errorMessage && { errorMessage }),
+    ...(username && { username }),
+    ...(phone_number && { phone_number }),
+    ...(intent && { intent }),
+    ...(full_name && { full_name })
+  });
+
+  return message;
 }); 
